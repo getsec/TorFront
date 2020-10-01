@@ -1,11 +1,27 @@
-import os
-
-from flask import Flask, render_template, request, flash, jsonify, send_file, after_this_request
+import os, json
+from flask import Flask, render_template, request, flash, jsonify, send_file, after_this_request, abort
 from flask_dropzone import Dropzone
-
 
 # Find the upload path
 basedir = os.path.abspath(os.path.dirname(__file__))
+
+api_key_list = os.getenv("KEYS", None)
+if api_key_list is None:
+    print("We weren't able to load the API keys. Good luck getting in...")
+else:
+    parsed_key_list = json.loads(api_key_list)
+
+
+def validate_key(request):
+    requested_key = request.json.get("key", None)
+    print(request)
+    if requested_key is not None:
+        if requested_key in parsed_key_list:
+            return True, {}
+        else:
+            return False, {"err": "bad api key"}
+    else:
+        return False, {"err": "no api key"}
 
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/' # set secret key
@@ -22,22 +38,28 @@ app.config.update(
 dropzone = Dropzone(app) # init upload field
 
 
+
 @app.route('/', methods=['POST', 'GET'])
 def upload():
     # If post, that means someone added files, put them in the correct dir...
     if request.method == 'POST':
         f = request.files.get('file')
         f.save(os.path.join(app.config['UPLOADED_PATH'], f.filename))
-        message = f"{f.filename} has been succesfully uploaded 👌🏼"
-        return render_template('index.html', status=message)
+
+        return render_template('index.html')
     # if get, means they just tryinig to see home page...
     if request.method == 'GET':
         return render_template('index.html')
 
-#! Need to password protect this endpoint.
+
 @app.route('/api/get')
 def download_file():
     if request.method == "GET": 
+        
+        validation_result, validation_message = validate_key(request)
+        if validation_result is False:
+            return jsonify(validation_message), 401
+            
         # grab filename from json payload. If !filename ret err
         filename = request.json.get("filename", None)
         if filename is not None:
@@ -56,16 +78,18 @@ def download_file():
             # if no file, ret err
             else:
                 return jsonify({"error": "that file doesnt exist"})
-       
+        
         return jsonify({"error": "filename k/v pair not found"})
         
 
 
 
-#! password protect this endpoint
 @app.route('/api/files')
 def grab_file():
     if request.method == "GET":
+        validation_result, validation_message = validate_key(request)
+        if validation_result is False:
+            return jsonify(validation_message), 401
         # list all of the files in the upload path so client can dl with /api/get
         files = os.listdir(os.path.join(app.root_path, app.config['UPLOADED_PATH']))
         return jsonify(files)
