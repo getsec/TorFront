@@ -60,7 +60,7 @@ def home():
         return render_template('index.html')
     # if get, means they just tryinig to see home page...
     if request.method == 'GET':
-        return render_template('index.html')
+        return redirect(url_for('upload'))
 
 
 @app.route('/api/get')
