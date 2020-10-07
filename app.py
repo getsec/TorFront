@@ -1,6 +1,7 @@
 import os, json
-from flask import Flask, render_template, request, flash, jsonify, send_file, after_this_request, abort
+from flask import Flask, render_template, request, flash, jsonify, redirect, send_file, after_this_request, abort, Response, url_for, flash, make_response, session
 from flask_dropzone import Dropzone
+
 
 # Find the upload path
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -35,12 +36,22 @@ app.config.update(
     DROPZONE_MAX_FILES=30 # num of max files
 )
 
+
+
 dropzone = Dropzone(app) # init upload field
 
 
 
+@app.route('/p')
+def x():
+    
+    print(request.cookies)
+
+    return "not good"
+    
+
 @app.route('/', methods=['POST', 'GET'])
-def upload():
+def home():
     # If post, that means someone added files, put them in the correct dir...
     if request.method == 'POST':
         f = request.files.get('file')
@@ -93,6 +104,39 @@ def grab_file():
         # list all of the files in the upload path so client can dl with /api/get
         files = os.listdir(os.path.join(app.root_path, app.config['UPLOADED_PATH']))
         return jsonify(files)
+
+@app.route('/login', methods=['POST', 'GET'])
+def login():
+    if request.method == 'POST':
+        password = request.form.get('password', None)
+
+        if password is None:
+            return "<h1> u need creds dummy</h1>"
+        else:
+            if password == "NathansAwesomePassw0rd909912312312":
+                response = redirect(url_for("upload"))
+                response.set_cookie('token', "x;=1-23=-1;23=;=''das;d;//-/1-=2312asdaASDKAPO")
+                return response
+            else:
+                return render_template('login.html', error="incorrect creds fam")
+    if request.method == 'GET':
+        return render_template('login.html')
+
+
+@app.route('/upload', methods=['POST', 'GET'])
+def upload():
+        # If post, that means someone added files, put them in the correct dir...
+    if request.method == 'POST':
+        f = request.files.get('file')
+        f.save(os.path.join(app.config['UPLOADED_PATH'], f.filename))
+
+        return render_template('upload.html')
+    # if get, means they just tryinig to see home page...
+    if request.method == 'GET':
+        if request.cookies.get("token") == "x;=1-23=-1;23=;=''das;d;//-/1-=2312asdaASDKAPO":
+            return render_template('upload.html')
+        else:
+            return redirect(url_for('login'))
 
 # debugging stuff...
 if __name__ == '__main__':

@@ -1,0 +1,48 @@
+{% extends "index.html" %}
+
+{% block content %}
+<!-- <div class='container-sm'> -->
+</br></br></br>
+
+
+
+
+
+<div class="container-fluid">
+    <div class="row">
+      <div class="col-sm"></div>
+      
+      
+      <div class="col-lrg">
+        <form action="/login" method="post" class="form-inline "> <!-- w-400 = width: 40rem (400px), mw-full = max-width: 100% -->
+
+            <div class="form-group"> <!-- mb-0 = margin-bottom: 0 -->
+                <div class="custom-control">
+                    <div class="custom-checkbox">
+                      <div class="form-group">
+                        <input type="password" class="form-control" placeholder="Password" name="password" id="password" required="required">
+                        <input type="submit" class="btn" value="Sign in"> 
+                     </div>
+                    
+                    
+                </div>
+            </div>
+                <!-- ml-auto = margin-left: auto -->
+            </div>
+        </form>
+
+      </div>
+      <div class="col-sm"></div>
+    </div>
+
+<!-- Inline form with form-groups -->
+   
+
+    {% if error is defined %}
+    <script> alert("Wrong Creds asshole") </script>
+    {% else %}
+    
+
+{% endif %}
+</div>
+{% endblock %}
